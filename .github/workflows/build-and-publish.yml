@@ -3,6 +3,9 @@ name: Create and publish image/chart to Github
 on:
   push:
     branches: ['master']
+  create:
+    types:
+      - created
 
 env:
   REGISTRY: ghcr.io
