@@ -1,0 +1,114 @@
+# Deployment values for pgbouncer
+
+image:
+  repository: ghcr.io/yasn77/pgbouncer
+  tag: v0.0.4
+  pullPolicy: IfNotPresent
+
+replicaCount: 4
+
+autoscaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+internalPort: 5432
+antiAffinity: soft
+# optionally define nodeAffinity
+nodeAffinity: {}
+# optionally define tolerations
+tolerations: []
+
+budget:
+  # PodDisruptionBudget spec.minAvailable
+  minAvailable: 50%
+
+serviceMonitor:
+  enabled: true
+
+# If defined, use an existing secret for pgbouncer users
+usersSecretName: ""
+
+# If SecretName isn't defined, add the users below
+users: {}
+#  username: password
+
+# Custom pgbouncer.ini
+settings:
+  auth_type: md5
+  auth_query: "SELECT usename, passwd FROM pg_shadow WHERE usename=$1"
+  auth_user: postgres
+
+connectionLimits:
+  maxClientConn: 100
+  defaultPoolSize: 100
+  minPoolSize: 15
+  reservePoolSize: 25
+  reservePoolTimeout: 5
+
+spec:
+  # Add custom pod labels here
+  labels: {}
+  annotations:
+    {}
+    # Add custom pod annotations here
+    # Annotations are converted to a JSON string and run through
+    # the helm `tpl` function. Then converted back to a map and
+    # rendered as YAML. This allows usage of go template directives
+    # in your annotations.
+
+# Add custom deployment labels here
+labels: {}
+
+tcpKeepcnt: 2
+tcpKeepidle: 1770
+tcpKeepintvl: 10
+logConnections: 0
+logDisconnections: 0
+logStats: 0
+logPoolerErrors: 1
+verbose: 0
+statsPeriod: 60
+
+# add key: value map entries to customSettings to be added to pbgouncer.ini [pgbouncer] section
+customSettings: {}
+
+# Service configuration
+service:
+  enabled: true
+  type: ClusterIP
+  name: ""
+  port: 5432
+  annotations: {}
+
+global:
+  # optionally use namespace as dbname
+  namespacedDatabases: false
+
+networkPolicy:
+  ingress: {}
+  egress: {}
+
+resources:
+  cpu: 150m
+  memory: 256Mi
+
+databases: {}
+#  name:
+#    host: host
+#    port: port
+#    user: user
+#    dbname: dbname

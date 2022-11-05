@@ -45,12 +45,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-            #      - name: Run chart-releaser
-            #        uses: helm/chart-releaser-action@v1.3.0
-            #        with:
-            #          charts_dir: helm/
-            #        env:
-            #          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.3.0
+        with:
+          charts_dir: helm/
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Build and push Unsigned Docker image
         uses: docker/build-push-action@v3

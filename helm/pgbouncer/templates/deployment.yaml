@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pgbouncer.fullname" . }}
+  labels:
+    {{- include "pgbouncer.labels" . | nindent 4 }}
+spec:
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 15%
+      maxSurge: 30%
+  replicas: {{ .Values.autoscaling.enabled | ternary 1 .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pgbouncer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "pgbouncer.labels" . | nindent 8 }}
+      annotations:
+        checksum/ini: {{ include "pgbouncer.ini.1.0.0" . | sha256sum }}
+        {{- if not .Values.usersSecretSha256 }}
+        checksum/users: {{ include "userlist.txt.1.0.0" . | sha256sum }}
+        {{- end }}
+        {{- if .Values.spec.annotations }}
+        {{- /* Using toJson instead of toYaml due to https://github.com/helm/helm/issues/3470  */ -}}
+        {{- tpl (toJson .Values.spec.annotations) . | fromJson | toYaml |  nindent 8 }}
+        {{- end }}
+    spec:
+      affinity:
+        {{- if eq .Values.antiAffinity "hard" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  {{- include "pgbouncer.selectorLabels" . | nindent 18 }}
+        {{- else if eq .Values.antiAffinity "soft" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    {{- include "pgbouncer.selectorLabels" . | nindent 20 }}
+        {{- end }}
+        {{- if .Values.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml .Values.nodeAffinity | nindent 10 }}
+        {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.imagePullSecretName }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName }}
+      {{- end }}
+      volumes:
+        - name: userlist
+          secret:
+          {{- if .Values.usersSecretName }}
+            secretName: {{ .Values.usersSecretName }}
+          {{- else }}
+            secretName: {{ include "pgbouncer.fullname" . }}-userlist
+          {{- end }}
+        - name: configfile
+          secret:
+            secretName: {{ include "pgbouncer.fullname" . }}-configfile
+        - name: socket
+          emptyDir: {}
+      terminationGracePeriodSeconds: 150
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: pgbouncer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: pgbouncer
+              containerPort: {{ .Values.internalPort }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.internalPort }}
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.internalPort }}
+            initialDelaySeconds: 20
+            failureThreshold: 6
+            periodSeconds: 10
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","kill -s INT 1 && sleep 150"]
+          volumeMounts:
+            - name: userlist
+              mountPath: /etc/pgbouncer/userlist.txt
+              subPath: userlist.txt
+              readOnly: true
+            - name: configfile
+              subPath: pgbouncer.ini
+              mountPath: /etc/pgbouncer/pgbouncer.ini
+              readOnly: true
+            - name: socket
+              mountPath: /socket
+          resources:
+            limits:
+              cpu: {{ .Values.resources.cpu }}
+              memory: {{ .Values.resources.memory }}
+            requests:
+              cpu: {{ .Values.resources.cpu }}
+              memory: {{ .Values.resources.memory }}
+        - name: pgbouncer-exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: exporter
+              containerPort: 9127
+          command: ["/usr/bin/pgbouncer_exporter"]
+          args:
+            - "--pgBouncer.connectionString=postgres://?host=/socket&sslmode=disable&user=pgbouncer&dbname=pgbouncer"
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 9127
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9127
+            initialDelaySeconds: 20
+            failureThreshold: 6
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: socket
+              mountPath: /socket
