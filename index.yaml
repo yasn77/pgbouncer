@@ -1,0 +1,13 @@
+apiVersion: v1
+entries:
+  pgbouncer:
+  - apiVersion: v2
+    appVersion: 1.17.0
+    created: "2022-11-05T17:28:36.660707265Z"
+    description: PgBouncer chart, forked from https://github.com/duyet/charts/tree/master/pgbouncer
+    digest: 219f99b009c0c4292f5e1a14559711f96db835c4f85897c41c1c0839bd1271e6
+    name: pgbouncer
+    urls:
+    - https://github.com/yasn77/pgbouncer/releases/download/pgbouncer-0.0.5/pgbouncer-0.0.5.tgz
+    version: 0.0.5
+generated: "2022-11-05T17:28:36.660720165Z"
