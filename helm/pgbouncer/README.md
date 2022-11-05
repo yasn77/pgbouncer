@@ -4,6 +4,8 @@
 
 PgBouncer chart, forked from https://github.com/duyet/charts/tree/master/pgbouncer
 
+This fork contains addtional values and resources
+
 ## Values
 
 | Key | Type | Default | Description |
