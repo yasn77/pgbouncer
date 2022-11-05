@@ -1,10 +1,8 @@
 # pgbouncer
 
-![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![AppVersion: 1.17.0](https://img.shields.io/badge/AppVersion-1.17.0-informational?style=flat-square)
+![Version: 0.0.5](https://img.shields.io/badge/Version-0.0.5-informational?style=flat-square) ![AppVersion: 1.17.0](https://img.shields.io/badge/AppVersion-1.17.0-informational?style=flat-square)
 
 PgBouncer chart, forked from https://github.com/duyet/charts/tree/master/pgbouncer
-
-This fork contains addtional values and resources
 
 ## Values
 
