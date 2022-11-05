@@ -3,6 +3,7 @@ name: Create and publish image/chart to Github
 on:
   push:
     branches: ['master']
+    tags: [ v* ]
 
 env:
   REGISTRY: ghcr.io
