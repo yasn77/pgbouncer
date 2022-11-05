@@ -28,12 +28,10 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Install Helm
-        uses: azure/setup-helm@v1
-        with:
-          version: v3.7.1
+        uses: azure/setup-helm@v3
 
       - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -46,7 +44,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.3.0
+        uses: helm/chart-releaser-action@v1.4.1
         with:
           charts_dir: helm/
         env:
