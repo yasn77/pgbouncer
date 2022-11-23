@@ -99,6 +99,7 @@ global:
   namespacedDatabases: false
 
 networkPolicy:
+  enabled: true
   ingress: {}
   egress: {}
 
