@@ -1,5 +1,5 @@
 apiVersion: v2
 appVersion: "1.17.0"
-version: 0.0.6
+version: 0.0.7
 description: PgBouncer chart, forked from https://github.com/duyet/charts/tree/master/pgbouncer
 name: pgbouncer
