@@ -1,3 +1,4 @@
+{{- if .Values.networkPolicy.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -12,27 +13,18 @@ spec:
   - Egress
   ingress:
   {{- if .Values.networkPolicy.ingress -}}
-  {{- toYaml .Values.networkPolicy.ingress | nindent 2 }}
-  {{ else }}
+  {{- toYaml .Values.networkPolicy.ingress | nindent 4 }}
+  {{- else }}
     - ports:
         - protocol: TCP
           port: {{ .Values.internalPort }}
         - protocol: TCP
           port: 9127
-  {{ end -}}
-  {{ if .Values.databases -}}
-  egress:
-    - to:
-        - namespaceSelector: {}
-      ports:
-        - protocol: UDP
-          port: 53
-    - ports:
-  {{- with .Values.databases }}
-      - protocol: TCP
-        port: {{ .port | default "5432" }}
   {{- end -}}
-  {{ else -}}
+  {{- if .Values.networkPolicy.egress -}}
+  {{- toYaml .Values.networkPolicy.egress | nindent 4 }}
+  {{ else }}
   egress:
     - {}
+  {{ end }}
   {{ end }}
